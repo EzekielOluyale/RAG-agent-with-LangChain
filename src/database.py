@@ -28,17 +28,6 @@ def get_vector_store():
         index=index
     )
 
-def ingest_documents():
-    docs = load_documents()
-
-    all_splits = split_documents(docs)
-
-    vector_store = get_vector_store()
-
-    vector_store.add_documents(all_splits, batch_size=1)
-
-    return vector_store
-
 def get_checkpointer():
     DB_URI = os.getenv("DATABASE_URL")
 
