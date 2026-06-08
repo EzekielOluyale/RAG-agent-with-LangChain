@@ -27,5 +27,4 @@ RUN mkdir -p /app/logs
 # Expose the port FastAPI will run on
 EXPOSE 8000
 
-# 12. Run multi-worker production configuration without --reload
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]
