@@ -3,7 +3,6 @@ import logging
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone
-from langgraph.checkpoint.postgres import PostgresSaver
 
 logger = logging.getLogger(__name__)
 
