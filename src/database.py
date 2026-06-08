@@ -1,6 +1,5 @@
 import os
 import logging
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone
@@ -18,20 +17,27 @@ def get_vector_store():
     logger.info("Initializing Pinecone connection...")
     embeddings = get_embeddings()
     pc = Pinecone()
-    index = pc.Index("rag")
+    index_name = os.getenv("PINECONE_INDEX")
+    index = pc.Index(index_name)
+
     return PineconeVectorStore(
         embedding=embeddings,
         index=index
     )
 
+
 def get_checkpointer():
-    DB_URI = os.getenv("DATABASE_URL")
-    if not DB_URI:
-        logger.error("DATABASE_URL environment variable is missing!")
-        raise ValueError("DATABASE_URL environment variable is missing!")
-    
-    logger.info("Connecting to Supabase checkpointer database...")
-    checkpointer = PostgresSaver.from_conn_string(DB_URI)
-    checkpointer.setup() 
-    logger.info("Database checkpointer tables verified successfully.")
-    return checkpointer
+    try:
+        DB_URI = os.getenv("DATABASE_URL")
+        if not DB_URI:
+            logger.error("DATABASE_URL environment variable is missing!")
+            raise ValueError("DATABASE_URL environment variable is missing!")
+        logger.info("Connecting to Supabase checkpointer database...")
+        checkpointer = PostgresSaver.from_conn_string(DB_URI)
+        checkpointer.setup()
+        logger.info("Database checkpointer initialized successfully.")
+        return checkpointer
+
+    except Exception as e:
+        logger.exception(f"Failed to initialize checkpointer: {e}")
+        raise
