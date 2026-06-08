@@ -13,6 +13,4 @@ services:
     restart: always
     # The volumes section ensures your local virtual environment doesn't break the Linux container
     volumes:
-      - .:/app
-      - /app/.venv/
-      - /app/venv/
+      - ./logs:/app/logs
