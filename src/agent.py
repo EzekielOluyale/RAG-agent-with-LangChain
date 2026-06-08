@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Literal
 from pydantic import BaseModel, Field
 from langchain.messages import HumanMessage
@@ -6,6 +7,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.tools import tool
 from langgraph.graph import MessagesState, StateGraph, START, END
 from langgraph.prebuilt import ToolNode
+from langgraph.config import get_config
+
+logger = logging.getLogger(__name__)
 
 response_model = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
@@ -25,11 +29,17 @@ def create_retriever_tool(vectorstore):
     @tool
     def retrieve_personal_data(query: str) -> str:
         """Search and return information about Ezekiel Oluyale Resume."""
+        config = get_config()
+        thread_id = config["configurable"].get("thread_id", "unknown")
+
+        logger.info(f"[Thread: {thread_id}] Querying Pinecone with: {query}")
         docs = retriever.invoke(query)
         
         if not docs:
+            logger.warning(f"[Thread: {thread_id}] No documents found in Pinecone.")
             return "NO_CONTEXT_FOUND"
             
+        logger.info(f"[Thread: {thread_id}] Successfully retrieved {len(docs)} document chunks.")
         return "\n\n".join([doc.page_content for doc in docs])
         
     return retrieve_personal_data
@@ -72,7 +82,7 @@ GENERATE_PROMPT = (
 )
 
 def build_agent(vectorstore, checkpointer=None):
-    
+    logger.info("Building agent workflow...")
     retriever_tool = create_retriever_tool(vectorstore)
 
     # Generate Query
@@ -80,6 +90,11 @@ def build_agent(vectorstore, checkpointer=None):
         """Call the model to generate a response based on the current state. Given
         the question, it will decide to retrieve using the retriever tool, or simply respond to the user.
         """
+
+        config = get_config()
+        thread_id = config["configurable"].get("thread_id", "unknown")
+
+        logger.info(f"[Thread: {thread_id}] Generating response or retrieval query.")
         response = (
             response_model
             .bind_tools([retriever_tool]).invoke(state["messages"])
@@ -90,6 +105,11 @@ def build_agent(vectorstore, checkpointer=None):
         state: MessagesState,
     ) -> Literal["generate_answer", "rewrite_question"]:
         """Determine whether the retrieved documents are relevant to the question."""
+
+        config = get_config()
+        thread_id = config["configurable"].get("thread_id", "unknown")
+
+        logger.info(f"[Thread: {thread_id}] Grading retrieved documents for relevance.")
         question = next((m.content for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), state["messages"][0].content)
         context = state["messages"][-1].content
 
@@ -102,20 +122,33 @@ def build_agent(vectorstore, checkpointer=None):
         )
         score = response.binary_score
 
+        logger.info(f"[Thread: {thread_id}] Grade: {score}")
         if score == "yes":
             return "generate_answer"
         else:
+            logger.warning(f"[Thread: {thread_id}] Documents not relevant.")
             return "rewrite_question"
 
     def rewrite_question(state: MessagesState):
         """Rewrite the original user question."""
+        config = get_config()
+        thread_id = config["configurable"].get("thread_id", "unknown")
+
         question = next((m.content for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), state["messages"][0].content)
+        logger.info(f"[Thread: {thread_id}] Rewriting question {question}")
+
         prompt = REWRITE_PROMPT.format(question=question)
         response = response_model.invoke([{"role": "user", "content": prompt}])
+
+        logger.info(f"[Thread: {thread_id}] Rewritten question: {response.content}")
         return {"messages": [HumanMessage(content=response.content)]}
 
     def generate_answer(state: MessagesState):
         """Generate an answer."""
+        config = get_config()
+        thread_id = config["configurable"].get("thread_id", "unknown")
+
+        logger.info(f"[Thread: {thread_id}] Generating answer.")
         question = next((m.content for m in reversed(state["messages"]) if isinstance(m, HumanMessage)), state["messages"][0].content)
         context = state["messages"][-1].content
         prompt = GENERATE_PROMPT.format(question=question, context=context)
@@ -124,9 +157,15 @@ def build_agent(vectorstore, checkpointer=None):
 
     # Route based on whether the model requested tool calls.
     def route_on_tool_calls(state: MessagesState):
+        config = get_config()
+        thread_id = config["configurable"].get("thread_id", "unknown")
+
         last_message = state["messages"][-1]
         if getattr(last_message, "tool_calls", None):
+            logger.info(f"[Thread: {thread_id}] Tool calls detected.")
             return "tools"
+
+        logger.info(f"[Thread: {thread_id}] No tool calls detected, ending workflow.")
         return END
 
     
@@ -160,4 +199,5 @@ def build_agent(vectorstore, checkpointer=None):
     workflow.add_edge("rewrite_question", "generate_query_or_respond")
 
     # Compile
+    logger.info("Agent StateGraph successfully compiled.")
     return workflow.compile(checkpointer=checkpointer)
