@@ -23,7 +23,3 @@ logs/
 # IDEs
 .vscode/
 .idea/
-
-# Docker config files
-Dockerfile
-docker-compose.yml
