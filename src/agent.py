@@ -26,7 +26,7 @@ grader_model = ChatGoogleGenerativeAI(
 )
 
 def create_retriever_tool(vectorstore):
-    retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+    retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
     @tool
     def retrieve_personal_data(query: str) -> str:
