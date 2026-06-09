@@ -110,7 +110,11 @@ async def chat(request: ChatRequest):
         )
         
         answer = response["messages"][-1].content
-        
+
+        if isinstance(answer, list):
+            answer = "".join([block.get("text", "") for block in answer if isinstance(block, dict) and block.get("type") == "text"])
+        elif hasattr(answer, "content"):
+            answer = answer.content
         return ChatResponse(answer=answer)
         
     except Exception as e:
