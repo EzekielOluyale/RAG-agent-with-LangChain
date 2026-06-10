@@ -104,7 +104,7 @@ def build_agent(vector_store, checkpointer=None):
             "Do NOT include conversational filler, pleasantries, or introductory sentences like 'Thank you for...' or 'I can tell you...'. "
             "Get straight to the point of the user's question. "
             "If a user asks a question unrelated to his resume "
-            "politely decline to answer and redirect them to his professional background. "
+            "politely decline to answer and redirect them to his resume and professional background. "
             "Do not answer general knowledge questions or act as a general-purpose AI."
         )
 
