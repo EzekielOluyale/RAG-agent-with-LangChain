@@ -43,7 +43,7 @@ This is a chatbot built to answer questions about my resume and professional bac
 ## How to Run It Locally
 Clone this project:
 ```
-git clone [https://github.com/EzekielOluyale/RAG-agent-with-LangGraph.git](https://github.com/EzekielOluyale/RAG-agent-with-LangGraph.git)
+git clone https://github.com/EzekielOluyale/RAG-agent-with-LangGraph.git
 cd RAG-agent-with-LangGraph
 ```
 Add your secret keys: Create a file named .env in the root folder and add your keys
