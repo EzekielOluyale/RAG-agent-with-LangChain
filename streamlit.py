@@ -2,6 +2,11 @@ import streamlit as st
 import requests
 import uuid
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 st.set_page_config(page_title="AI Chatbot", page_icon="🤖", layout="centered")
 st.title("My AI Chatbot")
 
@@ -21,7 +26,7 @@ if prompt := st.chat_input("Ask me anything..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     # Render FastAPI endpoint
-    backend_url = "https://rag-agent-with-langgraph.onrender.com/chat"
+    backend_url = os.getenv("BACKEND_URL")
     
     payload = {
         "message": prompt,
