@@ -48,7 +48,8 @@ cd RAG-agent-with-LangGraph
 ```
 Add your secret keys: Create a file named .env in the root folder and add your keys
 ```
-GOOGLE_API_KEY=your_gemini_api_key_here
+GOOGLE_API_KEY=your_google_cloud_api_key_here
+GCP_PROJECT_ID=your_google_cloud_project_id
 PINECONE_API_KEY=your_pinecone_api_key_here
 PINECONE_INDEX_NAME=your_index_name_here
 DATABASE_URL=your_supabase_url
@@ -62,9 +63,9 @@ pip install -r requirements.txt
 ```
 
 ## IMPORTANT STEP
-Before starting the chatbot, you must upload Ezekiel's resume data into Pinecone.
+Before starting the chatbot, you must upload data into Pinecone.
 - Open and run all the cells inside experiment.ipynb.
-- This will read the resume text, turn it into vectors, and save it safely in your Pinecone index.
+- This will read the data, turn it into vectors, and save it safely in your Pinecone index.
 
 ## Run the Streamlit Web App
 ```
@@ -80,7 +81,7 @@ Rag-agent-with-LangGraph/
 ├── data
 │   ├── ...
 ├── notebooks
-│   ├── ...              
+│   ├── experiment.ipynb              
 ├── src
 │   ├── ...         
 ├── .dockerignore
